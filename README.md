@@ -254,60 +254,31 @@ int main() {
 
 ### Дополнительное задание 3
 
-Для точного извлечения двоичных разрядов не стоит сначала преобразовывать вход в `double`: это потеряет часть исходных цифр. Десятичную дробь можно представить точной рациональной дробью `numerator / denominator`, где знаменатель — степень 10. Затем 1000 раз умножать остаток на 2: если он достиг знаменателя, записывать `1` и вычитать знаменатель, иначе записывать `0`.
+Чтобы перевести вводимое число в двоичную систему без потерь и погрешности, принимаем ее как строку. Затем разбиваем на целую и дробные части и работаем с ними отдельно.
 
-Программа ниже читает одно конечное десятичное число, поддерживает знак и целую/дробную части, а затем выводит целую часть и первые 1000 бит дробной части. Для очень больших входных чисел используется `cpp_int`.
+Код представляет дробную часть как обыкновенную дробь `f/d`, где `d = 10^k`. Затем в цикле 1000 раз умножает числитель `f` на 2 — целая часть результата (`f // d`) даёт очередной двоичный разряд, а остаток (`f % d`) остаётся для следующего шага. 
 
-```cpp
-#include <iostream>
-#include <string>
-#include <boost/multiprecision/cpp_int.hpp>
-using namespace std;
-using boost::multiprecision::cpp_int;
+Целая часть числа просто переводится через `bin()`, а дробная — циклом.
 
-int main() {
-    string s;
-    cin >> s;
+```python
+s = input()
+if '.' in s:
+    a, b = s.split('.')
+else:
+    a, b = s, ''
 
-    bool negative = false;
-    size_t pos = 0;
-    if (s[pos] == '-' || s[pos] == '+') {
-        negative = (s[pos] == '-');
-        ++pos;
-    }
+n = int(a) if a else 0
+f = int(b) if b else 0
+d = 10 ** len(b)
 
-    cpp_int numerator = 0, denominator = 1;
-    bool afterPoint = false;
+res = bin(n)[2:] + '.'
+for _ in range(1000):
+    f *= 2
+    res += str(f // d)
+    f %= d
 
-    for (; pos < s.size(); ++pos) {
-        if (s[pos] == '.') {
-            afterPoint = true;
-            continue;
-        }
-        if (s[pos] < '0' || s[pos] > '9') return 0;
-        numerator = numerator * 10 + (s[pos] - '0');
-        if (afterPoint) denominator *= 10;
-    }
-
-    cpp_int integerPart = numerator / denominator;
-    cpp_int remainder = numerator % denominator;
-
-    if (negative) cout << "-";
-    cout << integerPart << ".";
-    for (int i = 0; i < 1000; ++i) {
-        remainder *= 2;
-        if (remainder >= denominator) {
-            cout << '1';
-            remainder -= denominator;
-        } else {
-            cout << '0';
-        }
-    }
-    cout << '\n';
-}
+print(res)
 ```
-
-Пример: для `0.5` дробная двоичная часть начинается с `1000…`. Если десятичная запись конечна, алгоритм работает с её точным значением, а не с приближением `double`. Знак относится ко всему числу; программа печатает знак перед целой частью.
 
 ### Дополнительное задание 4
 
@@ -317,7 +288,7 @@ int main() {
 - если `x` лишь немного больше 1 или меньше −1, считает это погрешностью округления и прижимает значение к ближайшей границе;
 - затем вызывает обычную `acos(x)`.
 
-Так можно избежать ошибки из-за результата вроде `1.0000000000000002`, который математически должен был быть равен 1. Значение `ep` должно соответствовать ожидаемой погрешности конкретных вычислений. В производственном коде вместо `0.0 / 0.0` предпочтительнее использовать `std::numeric_limits<long double>::quiet_NaN()`.
+Так можно избежать ошибки из-за результата вроде `1.0000000000000002`, который математически должен был быть равен 1. Значение `ep` должно соответствовать ожидаемой погрешности конкретных вычислений.
 
 ### Дополнительное задание 5
 
@@ -334,11 +305,11 @@ int main() {
 ```cpp
 #include <iostream>
 #include <cmath>
-using namespace std;
 
 int main() {
     double ax, ay, bx, by, cx, cy;
-    cin >> ax >> ay >> bx >> by >> cx >> cy;
+
+    std::cin >> ax >> ay >> bx >> by >> cx >> cy;
 
     double abx = bx - ax;
     double aby = by - ay;
@@ -348,8 +319,10 @@ int main() {
     double cross = abx * acy - aby * acx;
     const double eps = 1e-14;
 
-    if (cross > eps) cout << "слева";
-    else if (cross < -eps) cout << "справа";
-    else cout << "на прямой";
+    if (cross > eps) std::cout << "слева";
+    else if (cross < -eps) std::cout << "справа";
+    else std::cout << "на прямой";
+
+    return 0;
 }
 ```
